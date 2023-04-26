@@ -18,7 +18,7 @@ class PegawaiController extends ResourceController
     {
         $data = [
             'message' => 'success',
-            'data_pegawai' => model($this->modelNama)->findAll()
+            'data_pegawai' => model($this->modelNama)->orderBy('id','DESC')->findAll()
         ];
 
         return $this->respond($data, 200);
@@ -51,7 +51,37 @@ class PegawaiController extends ResourceController
      */
     public function create()
     {
-        //
+        //Validation
+        $rules = $this->validate([
+            'nama'      => 'required',
+            'jabatan'   => 'required',
+            'bidang'    => 'required',
+            'email'     => 'required',
+            'alamat'    => 'required',
+        ]);
+
+        if(!$rules){
+            $response = [
+                'message' => $this->validator->getErrors()
+            ];
+
+            return $this->failValidationErrors($response);
+        }
+
+        //Insert Method
+        model($this->modelNama)->insert([
+            'nama'      => esc($this->request->getVar('nama')),
+            'jabatan'   => esc($this->request->getVar('jabatan')),
+            'bidang'    => esc($this->request->getVar('bidang')),
+            'email'     => esc($this->request->getVar('email')),
+            'alamat'    => esc($this->request->getVar('alamat')),
+        ]);
+
+        $response = [
+            'message' => 'Success Created!'
+        ];
+
+        return $this->respondCreated($response);
     }
 
     /**
