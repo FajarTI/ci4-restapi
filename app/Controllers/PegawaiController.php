@@ -9,6 +9,7 @@ class PegawaiController extends ResourceController
 {
     protected $modelNama = 'App\Models\Pegawai';
     protected $format = 'json';
+
     /**
      * Return an array of resource objects, themselves in array format
      *
@@ -16,9 +17,11 @@ class PegawaiController extends ResourceController
      */
     public function index()
     {
+        $pegawaiModel = new Pegawai();
+
         $data = [
             'message' => 'success',
-            'data_pegawai' => model($this->modelNama)->orderBy('id','DESC')->findAll()
+            'data_pegawai' => $pegawaiModel->orderBy('id', 'DESC')->findAll()
         ];
 
         return $this->respond($data, 200);
@@ -27,21 +30,25 @@ class PegawaiController extends ResourceController
     /**
      * Return the properties of a resource object
      *
+     * @param int $id
      * @return mixed
      */
     public function show($id = null)
     {
-        //
-    }
+        $pegawaiModel = new Pegawai();
 
-    /**
-     * Return a new resource object, with default properties
-     *
-     * @return mixed
-     */
-    public function new()
-    {
-        //
+        $pegawai = $pegawaiModel->find($id);
+
+        if ($pegawai) {
+            $data = [
+                'message' => 'success',
+                'data_pegawai' => $pegawai
+            ];
+
+            return $this->respond($data, 200);
+        } else {
+            return $this->failNotFound('Pegawai not found');
+        }
     }
 
     /**
@@ -51,30 +58,33 @@ class PegawaiController extends ResourceController
      */
     public function create()
     {
-        //Validation
-        $rules = $this->validate([
+        $pegawaiModel = new Pegawai();
+
+        // Validation
+        $validation = \Config\Services::validation();
+        $validation->setRules([
             'nama'      => 'required',
             'jabatan'   => 'required',
             'bidang'    => 'required',
-            'email'     => 'required',
+            'email'     => 'required|valid_email',
             'alamat'    => 'required',
         ]);
 
-        if(!$rules){
+        if (!$validation->withRequest($this->request)->run()) {
             $response = [
-                'message' => $this->validator->getErrors()
+                'message' => $validation->getErrors()
             ];
 
             return $this->failValidationErrors($response);
         }
 
-        //Insert Method
-        model($this->modelNama)->insert([
-            'nama'      => esc($this->request->getVar('nama')),
-            'jabatan'   => esc($this->request->getVar('jabatan')),
-            'bidang'    => esc($this->request->getVar('bidang')),
-            'email'     => esc($this->request->getVar('email')),
-            'alamat'    => esc($this->request->getVar('alamat')),
+        // Insert Method
+        $pegawaiModel->insert([
+            'nama'      => $this->request->getVar('nama'),
+            'jabatan'   => $this->request->getVar('jabatan'),
+            'bidang'    => $this->request->getVar('bidang'),
+            'email'     => $this->request->getVar('email'),
+            'alamat'    => $this->request->getVar('alamat'),
         ]);
 
         $response = [
@@ -85,32 +95,78 @@ class PegawaiController extends ResourceController
     }
 
     /**
-     * Return the editable properties of a resource object
-     *
-     * @return mixed
-     */
-    public function edit($id = null)
-    {
-        //
-    }
-
-    /**
      * Add or update a model resource, from "posted" properties
      *
+     * @param int $id
      * @return mixed
      */
     public function update($id = null)
     {
-        //
+        $pegawaiModel = new Pegawai();
+
+        // Check if pegawai exists
+        $pegawai = $pegawaiModel->find($id);
+        if (!$pegawai) {
+            return $this->failNotFound('Pegawai not found');
+        }
+
+        // Validation
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'nama'      => 'required',
+            'jabatan'   => 'required',
+            'bidang'    => 'required',
+            'email'     => 'required|valid_email',
+            'alamat'    => 'required',
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            $response = [
+                'message' => $validation->getErrors()
+            ];
+
+            return $this->failValidationErrors($response);
+        }
+
+        // Update Method
+        $pegawaiModel->update($id, [
+            'nama'      => $this->request->getVar('nama'),
+            'jabatan'   => $this->request->getVar('jabatan'),
+            'bidang'    => $this->request->getVar('bidang'),
+            'email'     => $this->request->getVar('email'),
+            'alamat'    => $this->request->getVar('alamat'),
+        ]);
+
+        $response = [
+            'message' => 'Success Updated!'
+        ];
+
+        return $this->respond($response);
     }
 
     /**
      * Delete the designated resource object from the model
      *
+     * @param int $id
      * @return mixed
      */
     public function delete($id = null)
     {
-        //
+        $pegawaiModel = new Pegawai();
+
+        // Check if pegawai exists
+        $pegawai = $pegawaiModel->find($id);
+        if (!$pegawai) {
+            return $this->failNotFound('Pegawai not found');
+        }
+
+        // Delete Method
+        $pegawaiModel->delete($id);
+
+        $response = [
+            'message' => 'Success Deleted!'
+        ];
+
+        return $this->respondDeleted($response);
     }
 }
